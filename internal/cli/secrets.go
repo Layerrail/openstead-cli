@@ -81,7 +81,7 @@ func (a *app) secretCommands(name, section string) *cobra.Command {
 		}
 		return a.call(c, "DELETE", a.path(base+"/"+str(item["id"])), map[string]any{})
 	}})
-	parent.AddCommand(&cobra.Command{Use: "reveal KEY", Short: "Explicitly reveal one secret; Runivo audits this operation", Args: cobra.ExactArgs(1), RunE: func(c *cobra.Command, args []string) error {
+	parent.AddCommand(&cobra.Command{Use: "reveal KEY", Short: "Explicitly reveal one secret; Openstead audits this operation", Args: cobra.ExactArgs(1), RunE: func(c *cobra.Command, args []string) error {
 		base, e := baseFor(c)
 		if e != nil {
 			return e

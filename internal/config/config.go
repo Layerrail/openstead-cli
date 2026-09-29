@@ -32,13 +32,13 @@ type Project struct {
 type Store struct{ Directory string }
 
 func NewStore() (Store, error) {
-	dir := os.Getenv("RUNIVO_CONFIG_DIR")
+	dir := Env("CONFIG_DIR")
 	if dir == "" {
 		base, err := os.UserConfigDir()
 		if err != nil {
 			return Store{}, err
 		}
-		dir = filepath.Join(base, "runivo")
+		dir = DefaultDirectory(base)
 	}
 	return Store{dir}, nil
 }
@@ -52,7 +52,7 @@ func (s Store) Load() (Config, error) {
 		return result, err
 	}
 	if err = json.Unmarshal(raw, &result); err != nil {
-		return result, errors.New("invalid Runivo configuration; repair config.json before continuing")
+		return result, errors.New("invalid Openstead configuration; repair config.json before continuing")
 	}
 	if result.Profiles == nil {
 		result.Profiles = map[string]Profile{}
@@ -70,10 +70,12 @@ func CredentialID(profile Profile) string {
 	sum := sha256.Sum256([]byte(profile.APIURL + "\n" + profile.Workspace + "\n" + profile.KeyID))
 	return hex.EncodeToString(sum[:])
 }
+
+// The keychain service label is a storage contract shared with existing CLI/MCP installs.
 func Token(profile Profile) (string, error) {
 	token, err := keyring.Get("Runivo CLI", CredentialID(profile))
 	if err != nil {
-		return "", errors.New("no usable keychain credential; run runivo login, or set RUNIVO_API_KEY for CI")
+		return "", errors.New("no usable keychain credential; run openstead login, or set OPENSTEAD_API_KEY for CI")
 	}
 	return token, nil
 }
@@ -92,7 +94,12 @@ func DeleteToken(profile Profile) error {
 }
 func LoadProject() (Project, error) {
 	var p Project
-	raw, err := os.ReadFile("runivo.toml")
+	filename := "openstead.toml"
+	raw, err := os.ReadFile(filename)
+	if errors.Is(err, os.ErrNotExist) {
+		filename = "runivo.toml"
+		raw, err = os.ReadFile(filename)
+	}
 	if errors.Is(err, os.ErrNotExist) {
 		return p, nil
 	}
@@ -100,10 +107,10 @@ func LoadProject() (Project, error) {
 		return p, err
 	}
 	if len(raw) > 65536 {
-		return p, errors.New("runivo.toml exceeds 64 KiB")
+		return p, fmt.Errorf("%s exceeds 64 KiB", filename)
 	}
 	if err = toml.Unmarshal(raw, &p); err != nil {
-		return p, fmt.Errorf("invalid runivo.toml: %w", err)
+		return p, fmt.Errorf("invalid %s: %w", filename, err)
 	}
 	return p, nil
 }
@@ -123,7 +130,7 @@ func AtomicWrite(path string, raw []byte, mode os.FileMode, exclusive bool) erro
 		}
 		return closeErr
 	}
-	temp, err := os.CreateTemp(filepath.Dir(path), ".runivo-*")
+	temp, err := os.CreateTemp(filepath.Dir(path), ".openstead-*")
 	if err != nil {
 		return err
 	}
@@ -141,4 +148,26 @@ func AtomicWrite(path string, raw []byte, mode os.FileMode, exclusive bool) erro
 		return err
 	}
 	return os.Rename(name, path)
+}
+
+// Env prefers the Openstead spelling while preserving existing CI environments.
+// An explicitly empty Openstead value also overrides its legacy counterpart.
+func Env(suffix string) string {
+	if value, ok := os.LookupEnv("OPENSTEAD_" + suffix); ok {
+		return value
+	}
+	return os.Getenv("RUNIVO_" + suffix)
+}
+
+// DefaultDirectory keeps existing profiles and their origin-bound keychain entries usable.
+func DefaultDirectory(base string) string {
+	current := filepath.Join(base, "openstead")
+	legacy := filepath.Join(base, "runivo")
+	if _, err := os.Stat(filepath.Join(current, "config.json")); !errors.Is(err, os.ErrNotExist) {
+		return current
+	}
+	if _, err := os.Stat(filepath.Join(legacy, "config.json")); !errors.Is(err, os.ErrNotExist) {
+		return legacy
+	}
+	return current
 }

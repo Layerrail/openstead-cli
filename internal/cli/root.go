@@ -19,8 +19,8 @@ import (
 	"text/tabwriter"
 	"time"
 
-	"github.com/Layerrail/runivo-cli/internal/api"
-	"github.com/Layerrail/runivo-cli/internal/config"
+	"github.com/Layerrail/openstead-cli/internal/api"
+	"github.com/Layerrail/openstead-cli/internal/config"
 	"github.com/spf13/cobra"
 )
 
@@ -77,18 +77,18 @@ func Execute(ctx context.Context, args []string, in io.Reader, out, errout io.Wr
 	return 0
 }
 func (a *app) root(version, commit string) *cobra.Command {
-	root := &cobra.Command{Use: "runivo", Short: "Build and operate your services on Runivo", Version: version + " (" + commit + ")", SilenceUsage: true, SilenceErrors: true}
+	root := &cobra.Command{Use: "openstead", Short: "Build and operate your services on Openstead", Version: version + " (" + commit + ")", SilenceUsage: true, SilenceErrors: true}
 	root.SetIn(a.in)
 	root.SetOut(a.out)
 	root.SetErr(a.errout)
 	f := root.PersistentFlags()
 	f.BoolVar(&a.json, "json", false, "Machine-readable JSON (streams use NDJSON)")
 	f.BoolVarP(&a.yes, "yes", "y", false, "Confirm the requested operation without prompting")
-	f.StringVar(&a.base, "api-url", os.Getenv("RUNIVO_API_URL"), "Runivo API origin; HTTPS required")
-	f.StringVarP(&a.workspace, "workspace", "w", os.Getenv("RUNIVO_WORKSPACE"), "Workspace ID (must match the API key)")
-	f.StringVarP(&a.service, "service", "s", os.Getenv("RUNIVO_SERVICE"), "Service ID or exact name")
-	f.StringVar(&a.profile, "profile", os.Getenv("RUNIVO_PROFILE"), "Saved workspace profile")
-	f.StringVar(&a.tokenFile, "token-file", os.Getenv("RUNIVO_TOKEN_FILE"), "Explicit credential file for headless environments")
+	f.StringVar(&a.base, "api-url", config.Env("API_URL"), "Openstead API origin; HTTPS required")
+	f.StringVarP(&a.workspace, "workspace", "w", config.Env("WORKSPACE"), "Workspace ID (must match the API key)")
+	f.StringVarP(&a.service, "service", "s", config.Env("SERVICE"), "Service ID or exact name")
+	f.StringVar(&a.profile, "profile", config.Env("PROFILE"), "Saved workspace profile")
+	f.StringVar(&a.tokenFile, "token-file", config.Env("TOKEN_FILE"), "Explicit credential file for headless environments")
 	root.AddCommand(a.authCommands()...)
 	root.AddCommand(a.resourceCommands()...)
 	root.AddCommand(a.operationCommands()...)
@@ -133,7 +133,7 @@ func (a *app) connect(ctx context.Context) error {
 	}
 	p, exists := a.settings.Profiles[name]
 	if a.profile != "" && !exists {
-		return fmt.Errorf("profile %q does not exist; run runivo login --profile NAME", name)
+		return fmt.Errorf("profile %q does not exist; run openstead login --profile NAME", name)
 	}
 	if a.workspace != "" && a.profile == "" && p.Workspace != a.workspace {
 		for candidateName, candidate := range a.settings.Profiles {
@@ -155,7 +155,7 @@ func (a *app) connect(ctx context.Context) error {
 	if a.base == "" {
 		a.base = api.DefaultURL
 	}
-	token := strings.TrimSpace(os.Getenv("RUNIVO_API_KEY"))
+	token := strings.TrimSpace(config.Env("API_KEY"))
 	if a.tokenFile != "" {
 		raw, e := readLimitedFile(a.tokenFile, 4096)
 		if e != nil {
@@ -177,7 +177,7 @@ func (a *app) connect(ctx context.Context) error {
 		}
 	}
 	if token == "" {
-		return &exitError{3, "sign in with runivo login, or set RUNIVO_API_KEY for CI"}
+		return &exitError{3, "sign in with openstead login, or set OPENSTEAD_API_KEY for CI"}
 	}
 	if !strings.HasPrefix(token, "rnv_") || strings.ContainsAny(token, "\r\n\t ") {
 		return errors.New("invalid API key format")
@@ -438,7 +438,7 @@ func (a *app) servicePath(c *cobra.Command) (string, map[string]any, error) {
 		return "", nil, err
 	}
 	if a.service == "" {
-		return "", nil, errors.New("select a service with --service NAME_OR_ID or runivo link")
+		return "", nil, errors.New("select a service with --service NAME_OR_ID or openstead link")
 	}
 	s, err := a.resolve(c, "services", a.service)
 	if err != nil {
@@ -447,7 +447,7 @@ func (a *app) servicePath(c *cobra.Command) (string, map[string]any, error) {
 	return "services/" + str(s["id"]), s, nil
 }
 func (a *app) linkCommand() *cobra.Command {
-	return &cobra.Command{Use: "link [SERVICE]", Short: "Save workspace/service context in this directory's runivo.toml", Args: cobra.MaximumNArgs(1), RunE: func(c *cobra.Command, args []string) error {
+	return &cobra.Command{Use: "link [SERVICE]", Short: "Save workspace/service context in this directory's openstead.toml", Args: cobra.MaximumNArgs(1), RunE: func(c *cobra.Command, args []string) error {
 		if len(args) > 0 {
 			a.service = args[0]
 		}
@@ -456,16 +456,16 @@ func (a *app) linkCommand() *cobra.Command {
 			return err
 		}
 		_ = path
-		if _, err = os.Stat("runivo.toml"); err == nil {
-			if err = a.confirm("Replace runivo.toml?"); err != nil {
+		if _, err = os.Stat("openstead.toml"); err == nil {
+			if err = a.confirm("Replace openstead.toml?"); err != nil {
 				return err
 			}
 		}
 		data := fmt.Sprintf("workspace = %q\nservice = %q\n", a.workspace, str(s["id"]))
-		if err = config.AtomicWrite("runivo.toml", []byte(data), 0600, false); err != nil {
+		if err = config.AtomicWrite("openstead.toml", []byte(data), 0600, false); err != nil {
 			return err
 		}
-		absolute, _ := filepath.Abs("runivo.toml")
+		absolute, _ := filepath.Abs("openstead.toml")
 		return a.print(map[string]any{"linked": str(s["name"]), "file": absolute})
 	}}
 }

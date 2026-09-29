@@ -109,7 +109,7 @@ func (a *app) githubCommand() *cobra.Command {
 	parent.AddCommand(detect)
 	for _, action := range []string{"connect", "install"} {
 		action := action
-		parent.AddCommand(&cobra.Command{Use: action, Short: "Open GitHub to " + action + " the Runivo integration", Args: cobra.NoArgs, RunE: func(c *cobra.Command, _ []string) error {
+		parent.AddCommand(&cobra.Command{Use: action, Short: "Open GitHub to " + action + " the Openstead integration", Args: cobra.NoArgs, RunE: func(c *cobra.Command, _ []string) error {
 			if e := a.connect(c.Context()); e != nil {
 				return e
 			}
@@ -211,7 +211,7 @@ func (a *app) backupsCommand() *cobra.Command {
 					if e != nil {
 						return errors.New("invalid download URL")
 					}
-					// Signed storage URLs use a separate client with no Runivo credentials and no redirects.
+					// Signed storage URLs use a separate client with no Openstead credentials and no redirects.
 					client := &http.Client{CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}
 					response, e := client.Do(request)
 					if e != nil {
@@ -245,7 +245,7 @@ func downloadTo(r io.Reader, path, checksum string) error {
 	if _, e := os.Lstat(path); e == nil {
 		return errors.New("output file already exists")
 	}
-	file, e := os.CreateTemp(filepath.Dir(path), ".runivo-download-*")
+	file, e := os.CreateTemp(filepath.Dir(path), ".openstead-download-*")
 	if e != nil {
 		return e
 	}

@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Layerrail/runivo-cli/internal/api"
+	"github.com/Layerrail/openstead-cli/internal/api"
 	"github.com/spf13/cobra"
 )
 
@@ -158,7 +158,7 @@ func (a *app) waitDeployment(c *cobra.Command, base, id string, timeout time.Dur
 		var result map[string]any
 		if err := a.client.Do(ctx, "GET", a.path(base+"/deploys/"+id), nil, &result, ""); err != nil {
 			if errors.Is(err, context.DeadlineExceeded) {
-				return &exitError{8, "wait timed out; deployment continues on Runivo"}
+				return &exitError{8, "wait timed out; deployment continues on Openstead"}
 			}
 			return err
 		}
@@ -190,7 +190,7 @@ func (a *app) waitDeployment(c *cobra.Command, base, id string, timeout time.Dur
 		}
 		if err := pause(ctx, time.Second); err != nil {
 			if errors.Is(err, context.DeadlineExceeded) {
-				return &exitError{8, "wait timed out; deployment continues on Runivo"}
+				return &exitError{8, "wait timed out; deployment continues on Openstead"}
 			}
 			return err
 		}
@@ -305,7 +305,7 @@ func (a *app) statusCommand() *cobra.Command {
 			}
 			if !strings.Contains(response.Header.Get("Content-Type"), "text/event-stream") {
 				response.Body.Close()
-				return errors.New("expected a Runivo event stream")
+				return errors.New("expected a Openstead event stream")
 			}
 			backoff = time.Second
 			err := readEvents(response.Body, func(event, data string) error {

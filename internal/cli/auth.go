@@ -12,8 +12,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Layerrail/runivo-cli/internal/api"
-	"github.com/Layerrail/runivo-cli/internal/config"
+	"github.com/Layerrail/openstead-cli/internal/api"
+	"github.com/Layerrail/openstead-cli/internal/config"
 	"github.com/spf13/cobra"
 )
 
@@ -49,7 +49,7 @@ func (a *app) authCommands() []*cobra.Command {
 				scope = "read"
 			}
 			host, _ := os.Hostname()
-			name := "Runivo CLI / " + clean(host)
+			name := "Openstead CLI / " + clean(host)
 			if len(name) > 80 {
 				name = name[:80]
 			}
@@ -67,7 +67,7 @@ func (a *app) authCommands() []*cobra.Command {
 			target, e := url.Parse(device.URL)
 			base, _ := url.Parse(client.BaseURL)
 			if e != nil || target.Host != base.Host || target.Scheme != base.Scheme || target.Path != "/api/v1/cli/authorize" || target.User != nil {
-				return errors.New("Runivo returned an unexpected browser approval URL")
+				return errors.New("Openstead returned an unexpected browser approval URL")
 			}
 			fmt.Fprintf(a.errout, "Open %s\nConfirm code: %s\n", device.URL, clean(device.UserCode))
 			if !noBrowser {
@@ -86,7 +86,7 @@ func (a *app) authCommands() []*cobra.Command {
 			defer cancel()
 			for {
 				if err = pause(ctx, interval); err != nil {
-					return errors.New("login expired or was cancelled; run runivo login again")
+					return errors.New("login expired or was cancelled; run openstead login again")
 				}
 				var response struct {
 					Token string `json:"access_token"`
@@ -110,7 +110,7 @@ func (a *app) authCommands() []*cobra.Command {
 			}
 		}
 		if !strings.HasPrefix(token, "rnv_") || strings.ContainsAny(token, "\r\n\t ") {
-			return errors.New("invalid Runivo API key")
+			return errors.New("invalid Openstead API key")
 		}
 		client.Token = token
 		stored := false
@@ -130,7 +130,7 @@ func (a *app) authCommands() []*cobra.Command {
 			return err
 		}
 		if !validID(current.Workspace.ID) || !validID(current.KeyID) {
-			return errors.New("Runivo returned an invalid workspace or credential identity")
+			return errors.New("Openstead returned an invalid workspace or credential identity")
 		}
 		if readOnly && current.Scope != "read" {
 			return errors.New("the imported API key is not read-only; create a read-only key in the dashboard")
@@ -224,7 +224,7 @@ func (a *app) authCommands() []*cobra.Command {
 			return err
 		}
 		if _, ok := a.settings.Profiles[args[0]]; !ok {
-			return errors.New("unknown profile; use runivo workspaces list")
+			return errors.New("unknown profile; use openstead workspaces list")
 		}
 		a.settings.Active = args[0]
 		if err := a.store.Save(a.settings); err != nil {

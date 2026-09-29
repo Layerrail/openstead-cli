@@ -2,7 +2,7 @@
 
 ## Workload acceptance for v0.1.2
 
-Verified on September 25, 2026 using the live Runivo API, an existing operations test service and the existing warm builder.
+Verified on September 25, 2026 using the live Openstead API, an existing operations test service and the existing warm builder.
 
 - `deploy --wait` fetched the configured public repository, built and uploaded its image, deployed it, observed its health checks and exited successfully at `live`.
 - The application returned HTTP 200 with its expected HTML over HTTPS.
@@ -31,7 +31,7 @@ Inspection of the current backend also found a restore checkout gap: its restore
 
 ## Initial release verification
 
-Verified on September 25, 2026 against the live Runivo control-plane API.
+Verified on September 25, 2026 against the live Openstead control-plane API.
 
 - Browser device authorization succeeded with both read and write scopes.
 - Windows OS keychain storage and an explicitly selected token file both worked.

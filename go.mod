@@ -1,4 +1,4 @@
-module github.com/Layerrail/runivo-cli
+module github.com/Layerrail/openstead-cli
 
 go 1.27.0
 

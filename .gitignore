@@ -9,3 +9,8 @@ coverage.out
 *.test
 runivo.toml
 !examples/runivo.toml
+
+/openstead.exe
+/openstead
+openstead.toml
+!examples/openstead.toml
