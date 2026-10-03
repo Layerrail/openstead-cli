@@ -14,7 +14,7 @@ import (
 	"time"
 )
 
-const DefaultURL = "https://openstead-dashboard.vercel.app"
+const DefaultURL = "https://dashboard.openstead.tech"
 const MaxResponse = 16 << 20
 
 type Error struct {

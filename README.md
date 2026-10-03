@@ -101,7 +101,9 @@ openstead deploy --service YOUR_SERVICE_UUID --wait --json
 
 CI can use an existing workspace API key; `login --token-stdin` imports one into the local credential store. `OPENSTEAD_API_KEY` overrides the keychain. An explicit `--token-file` overrides that environment key. Context flags: `--workspace/-w`, `--service/-s`, `--profile`, `--api-url`, `--token-file`, `--json`, `--yes/-y`. Environment equivalents: `OPENSTEAD_WORKSPACE`, `OPENSTEAD_SERVICE`, `OPENSTEAD_PROFILE`, `OPENSTEAD_API_URL`, `OPENSTEAD_TOKEN_FILE`, `OPENSTEAD_CONFIG_DIR`.
 
-Context precedence is explicit flags/environment, then local `openstead.toml` for workspace/service, then the active profile. A saved credential is never sent to a different API origin. Default API origin: `https://openstead-dashboard.vercel.app`.
+Context precedence is explicit flags/environment, then local `openstead.toml` for workspace/service, then the active profile. A saved credential is never sent to a different API origin. Default API origin: `https://dashboard.openstead.tech`.
+
+Profiles created against the former Vercel address stay pinned to that address. Run `openstead login` to authorize the new dashboard origin; confirm replacement if you reuse the same profile name. During the transition, `--api-url https://openstead-dashboard.vercel.app` continues to select the former origin explicitly.
 
 JSON output goes to stdout; errors and progress go to stderr. Follow/watch commands emit newline-delimited JSON. Use `--yes` for destructive operations in scripts. A deployment wait timeout stops the CLI wait, not the deployment. Resume with `deploys wait DEPLOYMENT_ID`. The CLI does not automatically retry mutations after an uncertain network response.
 
